@@ -20,6 +20,7 @@ import com.greenland.collabalarm.data.Fire
 import com.greenland.collabalarm.model.Alarm
 import com.greenland.collabalarm.alarm.AlarmScheduler
 import com.greenland.collabalarm.util.TimeUtils
+import com.greenland.collabalarm.notifications.Notify
 import kotlinx.coroutines.launch
 
 @Composable
@@ -47,6 +48,9 @@ fun HomeScreen(nav: NavController) {
     Scaffold(
         topBar = { TopAppBar(title = { Text("Collab alarm clock") }, actions = {
             TextButton(onClick = { nav.navigate("logs") }) { Text("Logs") }
+            TextButton(onClick = { nav.navigate("members") }) { Text("Members") }
+            TextButton(onClick = { nav.navigate("proposals") }) { Text("Proposals") }
+            TextButton(onClick = { nav.navigate("settings") }) { Text("Settings") }
         }) },
         floatingActionButton = {
             if (DemoMode.DEMO || (user != null && roomId != null)) {
@@ -85,7 +89,25 @@ fun HomeScreen(nav: NavController) {
                                                 val rid = roomId ?: return@launch
                                                 val updated = a.copy(enabled = on)
                                                 if (DemoMode.DEMO) DemoRepo.upsertAlarm(rid, updated) else Fire.upsertAlarm(rid, updated)
-                                                if (on) AlarmScheduler.schedule(ctx, updated) else AlarmScheduler.cancel(ctx, a.id)
+                                                if (on) {
+                                                    AlarmScheduler.schedule(ctx, updated)
+                                                    Notify.showActivity(ctx, "Alarm enabled", a.label)
+                                                } else {
+                                                    AlarmScheduler.cancel(ctx, a.id)
+                                                    // If repeating, offer "Turn on next time"
+                                                    if (a.repeatDays.isNotEmpty()) {
+                                                        val res = host.showSnackbar(
+                                                            message = "Alarm turned off",
+                                                            actionLabel = "Next time",
+                                                            withDismissAction = true
+                                                        )
+                                                        if (res == SnackbarResult.ActionPerformed) {
+                                                            val nextEnabled = updated.copy(enabled = true)
+                                                            if (DemoMode.DEMO) DemoRepo.upsertAlarm(rid, nextEnabled) else Fire.upsertAlarm(rid, nextEnabled)
+                                                            Notify.showActivity(ctx, "Will ring next time", a.label)
+                                                        }
+                                                    }
+                                                }
                                             }
                                         }
                                     )

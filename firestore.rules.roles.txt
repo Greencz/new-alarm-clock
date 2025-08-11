@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(roomId) { return get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.role == 'OWNER'; }
+    function isEditor(roomId) { return ['OWNER','EDITOR'].hasAny([get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.role]); }
+    function isViewer(roomId) { return get(/databases/$(database)/documents/rooms/$(roomId)/members/$(request.auth.uid)).data.role in ['OWNER','EDITOR','PROPOSER','VIEWER']; }
+
+    match /rooms/{roomId} {
+      allow read: if isSignedIn() && isViewer(roomId);
+      allow write: if isSignedIn() && isOwner(roomId); // owner can update room doc
+
+      match /members/{uid} {
+        allow read: if isSignedIn() && isViewer(roomId);
+        allow write: if isSignedIn() && isOwner(roomId);
+      }
+
+      match /alarms/{alarmId} {
+        allow read: if isSignedIn() && isViewer(roomId);
+        allow write: if isSignedIn() && isEditor(roomId);
+      }
+
+      match /events/{eventId} {
+        allow read: if isSignedIn() && isViewer(roomId);
+        allow write: if isSignedIn(); // server and clients can log
+      }
+
+      match /proposals/{proposalId} {
+        allow read: if isSignedIn() && isViewer(roomId);
+        allow create: if isSignedIn() && (isViewer(roomId) || isEditor(roomId)); // anyone in room can propose
+        allow delete, update: if isSignedIn() && isEditor(roomId); // editors/owners approve or reject
+      }
+    }
+  }
+}

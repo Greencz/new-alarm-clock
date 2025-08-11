@@ -1,0 +1,3 @@
+// PATCH NOTES: add a Settings button and gray out FAB for viewers if not demo.
+// In your HomeScreen top app bar actions add:
+//   TextButton(onClick = { nav.navigate("settings") }) { Text("Settings") }

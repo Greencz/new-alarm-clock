@@ -1,0 +1,12 @@
+<!-- Add inside <application> tag -->
+<receiver
+    android:name=".receiver.BootReceiver"
+    android:enabled="true"
+    android:exported="false">
+    <intent-filter>
+        <action android:name="android.intent.action.BOOT_COMPLETED" />
+    </intent-filter>
+</receiver>
+
+<!-- Set custom Application to init notification channels -->
+android:name=".App"

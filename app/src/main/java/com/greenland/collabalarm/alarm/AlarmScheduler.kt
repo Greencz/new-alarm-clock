@@ -6,9 +6,22 @@ import android.content.Context
 import android.content.Intent
 import com.greenland.collabalarm.receiver.AlarmReceiver
 import com.greenland.collabalarm.model.Alarm
+import com.greenland.collabalarm.core.DemoMode
+
+fun schedule(ctx: Context, alarm: Alarm) {
+    if (DemoMode.DEMO) return           // ← add this
+    // ... existing scheduling code
+}
+
+fun cancel(ctx: Context, alarmId: String) {
+    if (DemoMode.DEMO) return           // ← add this
+    // ... existing cancel code
+}
+
 
 object AlarmScheduler {
     fun schedule(ctx: Context, alarm: Alarm) {
+        if (DemoMode.DEMO) return
         val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(ctx, AlarmReceiver::class.java).apply {
             action = "ALARM_FIRE"
@@ -23,6 +36,7 @@ object AlarmScheduler {
     }
 
     fun cancel(ctx: Context, alarmId: String) {
+        if (DemoMode.DEMO) return
         val intent = Intent(ctx, AlarmReceiver::class.java).apply { action = "ALARM_FIRE" }
         val pi = PendingIntent.getBroadcast(
             ctx, alarmId.hashCode(), intent,

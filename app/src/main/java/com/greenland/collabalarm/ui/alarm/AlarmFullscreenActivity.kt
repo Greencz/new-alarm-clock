@@ -21,7 +21,7 @@ class AlarmFullscreenActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         alarmId = intent.getStringExtra("alarmId") ?: ""
         setContent {
-            CollabTheme(amoled = true) {
+            CollabTheme() {
                 FullscreenAlarm(
                     onSnooze = {
                         lifecycleScope.launch {

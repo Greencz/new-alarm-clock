@@ -12,7 +12,11 @@ import androidx.navigation.NavController
 import com.greenland.collabalarm.core.DemoMode
 import com.greenland.collabalarm.data.DemoRepo
 import com.greenland.collabalarm.data.Fire
+import com.greenland.collabalarm.data.MembersRepo
+import com.greenland.collabalarm.data.CollabRepo
+import com.greenland.collabalarm.data.Proposal
 import com.greenland.collabalarm.model.Alarm
+import com.greenland.collabalarm.model.Role
 import com.greenland.collabalarm.util.TimeUtils
 import kotlinx.coroutines.launch
 
@@ -22,10 +26,16 @@ fun EditAlarmScreen(nav: NavController) {
     var hour by remember { mutableStateOf(6) }
     var minute by remember { mutableStateOf(30) }
     var repeat by remember { mutableStateOf(setOf<Int>()) }
+    var myRole by remember { mutableStateOf(Role.OWNER) }
 
     val scope = rememberCoroutineScope()
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Edit alarm") }) }) { pad ->
+    LaunchedEffect(Unit) {
+        val rid = if (DemoMode.DEMO) "demo" else Fire.ensureDefaultRoom()
+        myRole = MembersRepo.myRole(rid)
+    }
+
+    Scaffold(topBar = { TopAppBar(title = { Text(if (myRole == Role.PROPOSER) "Propose alarm" else "Edit alarm") }) }) { pad ->
         Column(Modifier.padding(pad).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             OutlinedTextField(
                 label = { Text("Name") },
@@ -50,15 +60,28 @@ fun EditAlarmScreen(nav: NavController) {
             Text("Repeat on:")
             RepeatChips(selected = repeat, onChange = { repeat = it })
 
+            val actionLabel = if (myRole == Role.PROPOSER) "Submit for approval" else "Save"
             Button(onClick = {
                 scope.launch {
                     val roomId = if (DemoMode.DEMO) DemoRepo.ensureDefaultRoom() else Fire.ensureDefaultRoom()
                     val next = TimeUtils.nextFireFrom(hour, minute, repeat)
                     val alarm = Alarm(id = "", label = label, timeUtc = next, repeatDays = repeat, enabled = true, nextFireUtc = next)
-                    if (DemoMode.DEMO) DemoRepo.upsertAlarm(roomId, alarm) else Fire.upsertAlarm(roomId, alarm)
+
+                    if (myRole == Role.PROPOSER) {
+                        val payload = mapOf(
+                            "label" to alarm.label,
+                            "timeUtc" to alarm.timeUtc,
+                            "repeatDays" to alarm.repeatDays.toList(),
+                            "enabled" to alarm.enabled,
+                            "nextFireUtc" to alarm.nextFireUtc
+                        )
+                        CollabRepo.submit(roomId, Proposal(payload = payload, createdBy = "me"))
+                    } else {
+                        if (DemoMode.DEMO) DemoRepo.upsertAlarm(roomId, alarm) else Fire.upsertAlarm(roomId, alarm)
+                    }
                     nav.popBackStack()
                 }
-            }, modifier = Modifier.fillMaxWidth()) { Text("Save") }
+            }, modifier = Modifier.fillMaxWidth()) { Text(actionLabel) }
         }
     }
 }

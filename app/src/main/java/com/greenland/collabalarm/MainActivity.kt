@@ -16,7 +16,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            CollabTheme(amoled = false) {
+            CollabTheme() {
                 AppNav()
             }
         }
@@ -30,7 +30,9 @@ fun AppNav() {
         composable("home") { HomeScreen(nav) }
         composable("edit") { EditAlarmScreen(nav) }
         composable("members") { MembersScreen(nav) }
+        composable("proposals") { ProposalsScreen(nav) }
         composable("logs") { LogScreen(nav) }
+        composable("settings") { SettingsScreen(nav) }
         composable("signin") { SignInScreen(nav) }
     }
 }
@@ -38,7 +40,7 @@ fun AppNav() {
 @Preview
 @Composable
 fun PreviewApp() {
-    CollabTheme(amoled = false) {
+    CollabTheme() {
         androidx.compose.material3.Text("Collab alarm clock", color = MaterialTheme.colorScheme.onBackground)
     }
 }
