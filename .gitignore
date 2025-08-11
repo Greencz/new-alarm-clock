@@ -1,0 +1,22 @@
+# IDE
+.idea/
+*.iml
+
+# Gradle/build
+.gradle/
+build/
+**/build/
+
+# Android
+local.properties
+*.keystore
+*.jks
+
+# Firebase / secrets
+app/google-services.json
+
+# Dumps & archives
+*.hprof
+*.zip
+*.apk
+*.aab
