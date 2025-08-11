@@ -1,11 +1,11 @@
 package com.greenland.collabalarm.ui.alarm
 
-import androidx.activity.ComponentActivity
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -17,8 +17,8 @@ class AlarmFullscreenActivity : ComponentActivity() {
         setContent {
             CollabTheme(amoled = true) {
                 FullscreenAlarm(
-                    onSnooze = { finish() /* TODO schedule snooze */ },
-                    onDismiss = { finish() /* TODO log dismiss */ }
+                    onSnooze = { finish() },
+                    onDismiss = { finish() }
                 )
             }
         }
