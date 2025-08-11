@@ -1,32 +1,43 @@
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
-package com.greenland.collabalarm.ui.screens
+@file:OptIn(ExperimentalMaterial3Api::class)
 
+package com.greenland.collabalarm.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.google.firebase.Timestamp
+import com.greenland.collabalarm.core.DemoMode
+import com.greenland.collabalarm.data.DemoRepo
 import com.greenland.collabalarm.data.Fire
 import com.greenland.collabalarm.data.LogsRepo
 
 @Composable
 fun LogScreen(nav: NavController) {
-    var roomId by remember { mutableStateOf<String?>(null) }
     var items by remember { mutableStateOf<List<Map<String, Any?>>>(emptyList()) }
 
     LaunchedEffect(Unit) {
-        val rid = Fire.ensureDefaultRoom()
-        roomId = rid
-        LogsRepo.recentEventsFlow(rid).collect { list ->
-            val cutoff = System.currentTimeMillis() - 24*60*60*1000
-            items = list.filter {
-                val ts = (it["ts"] as? Timestamp)?.toDate()?.time ?: 0L
-                ts >= cutoff
+        if (DemoMode.DEMO) {
+            DemoRepo.recentEventsFlow("demo").collect { list ->
+                val cutoff = System.currentTimeMillis() - 24*60*60*1000
+                items = list.filter {
+                    val ts = (it["tsMs"] as? Long) ?: 0L
+                    ts >= cutoff
+                }
+            }
+        } else {
+            val rid = Fire.ensureDefaultRoom()
+            LogsRepo.recentEventsFlow(rid).collect { list ->
+                val cutoff = System.currentTimeMillis() - 24*60*60*1000
+                items = list.filter {
+                    val ts = (it["ts"] as? Timestamp)?.toDate()?.time ?: 0L
+                    ts >= cutoff
+                }
             }
         }
     }
@@ -39,8 +50,11 @@ fun LogScreen(nav: NavController) {
                         Text((m["type"] as? String) ?: "EVENT", style = MaterialTheme.typography.titleSmall)
                         val payload = (m["payload"] as? Map<*, *>)?.entries?.joinToString { "${it.key}=${it.value}" } ?: ""
                         Text(payload)
-                        val ts = (m["ts"] as? Timestamp)?.toDate()
-                        Text(ts?.toString() ?: "")
+                        val tsStr = when (val ts = m["ts"]) {
+                            is Timestamp -> ts.toDate().toString()
+                            else -> java.util.Date((m["tsMs"] as? Long) ?: 0L).toString()
+                        }
+                        Text(tsStr)
                     }
                 }
             }
