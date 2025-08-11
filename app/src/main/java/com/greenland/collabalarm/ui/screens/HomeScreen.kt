@@ -1,6 +1,6 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 package com.greenland.collabalarm.ui.screens
 
-@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
